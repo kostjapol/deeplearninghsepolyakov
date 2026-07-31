@@ -1,0 +1,40 @@
+defaults:
+  - model: lcnn
+  - writer: wandb
+  - metrics: asvspoof
+  - datasets: asvspoof
+  - dataloader: asvspoof
+  - transforms: asvspoof
+  - _self_
+
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 3e-4
+
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.StepLR
+  step_size: ${trainer.epoch_len}
+  gamma: 0.9
+
+loss_function:
+  _target_: src.loss.CrossEntropyLoss
+
+writer:
+  project_name: "asvspoof-2019-lcnn"
+  run_name: "lcnn-training"
+  mode: "online"
+
+trainer:
+  log_step: 20
+  n_epochs: 30
+  epoch_len: 500
+  device_tensors: ["data_object", "labels"]
+  resume_from: null
+  device: auto
+  override: False
+  monitor: "min val_EER"
+  save_period: 5
+  early_stop: 10
+  save_dir: "saved"
+  seed: 1
+  skip_oom: True
