@@ -47,12 +47,16 @@ class Trainer(BaseTrainer):
             if self.lr_scheduler is not None:
                 self.lr_scheduler.step()
 
-        # update metrics for each loss (in case of multiple losses)
+        # updated (met)
         for loss_name in self.config.writer.loss_names:
             metrics.update(loss_name, batch[loss_name].item())
 
         for met in metric_funcs:
-            metrics.update(met.name, met(**batch))
+            metric_value = met(**batch)
+
+            if metric_value is not None:
+                metrics.update(met.name, metric_value)
+
         return batch
 
     def _log_batch(self, batch_idx, batch, mode="train"):

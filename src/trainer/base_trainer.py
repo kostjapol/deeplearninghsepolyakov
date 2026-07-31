@@ -172,7 +172,7 @@ class BaseTrainer:
 
             # print logged information to the screen
             for key, value in logs.items():
-                self.logger.info(f"    {key:15s}: {value}")
+                self.logger.info(f"    {key}: {value}")
 
             # evaluate model performance according to configured metric,
             # save best checkpoint as model_best
@@ -263,6 +263,11 @@ class BaseTrainer:
         self.is_train = False
         self.model.eval()
         self.evaluation_metrics.reset()
+        # added (for metric)
+        for metric in self.metrics["inference"]:
+            if hasattr(metric, "reset"):
+                metric.reset()
+        #
         with torch.no_grad():
             for batch_idx, batch in tqdm(
                 enumerate(dataloader),
@@ -273,6 +278,12 @@ class BaseTrainer:
                     batch,
                     metrics=self.evaluation_metrics,
                 )
+            # added
+            for metric in self.metrics["inference"]:
+                if hasattr(metric, "compute"):
+                    metric_value = metric.compute()
+                    self.evaluation_metrics.update(metric.name, metric_value)
+            #
             self.writer.set_step(epoch * self.epoch_len, part)
             self._log_scalars(self.evaluation_metrics)
             self._log_batch(
